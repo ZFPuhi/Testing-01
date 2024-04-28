@@ -28,7 +28,7 @@ Currently still in test mode.
 <p>/disconnect - Command that will kick the bot from the Voice Channel.</p>
 <p>/l - Command that will kick the bot from the Voice Channel.</p>
 <p>/d - Command that will kick the bot from the Voice Channel.</p>
-
+<br>
 <p>More commands to be added in the future:</p>
 
 <p>-- Command to remove specific song from Queue per name/number in queue.</p>
