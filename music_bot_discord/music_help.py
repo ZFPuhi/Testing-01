@@ -4,7 +4,11 @@ from discord.ext import commands
 class music_help(commands.Bot):
     def __init__(self, bot):
         self.bot = bot
+        self.help_message = ""
+        self.text_channel_list = []
+        self.set_message()
 
+    def set_message(self):
         self.help_message = """"
 ```
 General commands, please use common sense:
@@ -18,7 +22,6 @@ General commands, please use common sense:
 /resume - resumes the current song/track
 ```
 """
-    self.text_channel_text = []
 
 @commands.bot.listener()
 async def on_ready(self):
