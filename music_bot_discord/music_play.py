@@ -17,13 +17,28 @@ class music_play(commands.Bot):
 
         self.vc = None
 
-def search_yt(self, item):
-    with YoutubeDL(self.YDL_OPTIONS) as ydl:
-        try:
-            info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
-        except Exception:
-            return False
-    return {'source': info['formats'[0]['url']], 'title': info['title']}
+#def search_yt(self, item):
+#    with YoutubeDL(self.YDL_OPTIONS) as ydl:
+#        try:
+#            info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
+#        except Exception:
+#            return False
+#    return {'source': info['formats'[0]['url']], 'title': info['title']}
+
+    def search_yt_spotify(self, item):
+        ydl = YoutubeDL(self.YDL_OPTIONS)
+        with ydl:
+            try:
+                # Attempt to search in YouTube
+                info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
+                return {'source': info['formats'][0]['url'], 'title': info['title']}
+            except Exception:
+                # If searching in YouTube fails, try searching in Spotify
+                try:
+                    info = SpotifyDL().search_song(item)
+                    return {'source': info['url'], 'title': info['title']}
+                except Exception:
+                    return False
 
 def play_next(self):
     if len(self.music_queue) > 0:
@@ -66,7 +81,7 @@ async def play_music(self, ctx):
         elif self.is_paused:
             self.vc.resume()
         else:
-            song = self.search_yt(query)
+            song = self.search_yt_spotify(query)
             if type(song) == type(True):
                 await ctx.send("Could not find the song. Incorrect format, try a different song")
             else:
