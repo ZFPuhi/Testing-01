@@ -28,8 +28,18 @@ Currently still in test mode.
 <p>/disconnect - Command that will kick the bot from the Voice Channel.</p>
 <p>/l - Command that will kick the bot from the Voice Channel.</p>
 <p>/d - Command that will kick the bot from the Voice Channel.</p>
-<br>
-<p>More commands to be added in the future:</p>
+
+<br><br>
+# More commands to be added in the future:
 
 <p>-- Command to remove specific song from Queue per name/number in queue.</p>
 <p>-- Command to jump to a specific song in Queue.</p>
+
+<br><br>
+# Additional things that should/could be added in the future:
+<p>Add Buttons (play, pause, next song, show queue as buttons)</p>
+<p>Add maximum time for a song to be no more than 2 hours / 120 minutes</p>
+<p>Show current song time lenght</p>
+<p>When listing the Queue show total time</p>
+<p>increase queue up to 10 songs to be listed instead of only 4</p>
+
