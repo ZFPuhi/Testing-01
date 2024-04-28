@@ -5,8 +5,8 @@ import os
 # Function to read token from .token file
 def read_token_from_file():
     with open('.token', 'r') as file:
-        exec(file.read())  # Execute the content of the file
-        return TOKEN
+        token = file.read().strip()  # Read the token as a string and remove any leading/trailing whitespace
+        return token
 
 from music_help import music_help
 from music_play import music_play
