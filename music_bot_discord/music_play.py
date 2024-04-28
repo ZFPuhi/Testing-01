@@ -117,7 +117,7 @@ async def play_music(self, ctx):
             self.vc.stop()
             await self.play_music(ctx)
 
-# Command that will display the next 4 songs, in order to not fill the chat if there are more than 50 songs for example.
+# Command that will display the next 4 songs, in order to not fill the chat if there are too many songs in the Queue.
 @commands.command(name="queue", aliases=["q"], help="Display all the songs currently in the queue")
 async def queue(self, ctx):
     retval = ""
