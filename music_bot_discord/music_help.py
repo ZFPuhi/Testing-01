@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class music_help(commands.Bot):
+class music_help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.help_message = ""
@@ -9,7 +9,7 @@ class music_help(commands.Bot):
         self.set_message()
 
     def set_message(self):
-        self.help_message = """"
+        self.help_message = """
 ```
 General commands, please use common sense:
 /help
@@ -22,19 +22,18 @@ General commands, please use common sense:
 /resume - resumes the current song/track
 ```
 """
+    @commands.Cog.listener()
+    async def on_ready(self):
+        for guild in self.bot.guilds:
+            for channel in guild.text_channels:
+                self.text_channel_list.append(channel)
 
-@commands.bot.listener()
-async def on_ready(self):
-    for guild in self.bot.guilds:
-        for channel in guild.text_channels:
-            self.text_channel_text.append(channel)
-
-        await self.send_to_all(self.help_message)
+            await self.send_to_all(self.help_message)
 
     async def send_to_all(self, msg):
-        for text_channel in self.text_channel_text:
+        for text_channel in self.text_channel_list:
             await text_channel.send(msg)
 
-@commands.command(name="help", help="Display all the available commands")
-async def help(self, ctx):
-    await ctx.send(self.help_message)
+    @commands.command(name="help", help="Display all the available commands")
+    async def help(self, ctx):
+        await ctx.send(self.help_message)
