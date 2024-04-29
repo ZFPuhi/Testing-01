@@ -42,4 +42,5 @@ Currently still in test mode.
 <p>Show current song time lenght</p>
 <p>When listing the Queue show total time</p>
 <p>increase queue up to 10 songs to be listed instead of only 4</p>
+<p>To add the option to repeat (loop) a song/track and to stop repeating the song/track</p>
 
