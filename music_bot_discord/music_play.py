@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import asyncio
 
 from youtube_dl import YoutubeDL
 from spotify_dl import SpotifyDL
@@ -7,7 +8,6 @@ from spotify_dl import SpotifyDL
 class MusicPlay(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        
         self.is_playing = False
         self.is_paused = False
         self.music_queue = []
@@ -58,7 +58,7 @@ class MusicPlay(commands.Cog):
             else:
                 self.is_playing = False
 
-    @commands.command(name="play", aliases=["p", "playing"], help="Play the selected song")
+    @commands.command(name="play_puhinator", aliases=["p_puhinator", "playing_puhinator"], help="Play the selected song")
     async def play(self, ctx, *args):
         query = " ".join(args)
         voice_channel = ctx.author.voice.channel
@@ -76,7 +76,7 @@ class MusicPlay(commands.Cog):
                 if not self.is_playing:
                     await self.play_music(ctx)
 
-    @commands.command(name="pause", help="The current track/song has been paused")
+    @commands.command(name="pause_puhinator", help="The current track/song has been paused")
     async def pause(self, ctx, *args):
         if self.is_playing:
             self.is_playing = False
@@ -87,35 +87,69 @@ class MusicPlay(commands.Cog):
             self.is_paused = False
             self.vc.resume()
 
-    @commands.command(name="resume", aliases=["r"], help="Resume playing the current track/song")
+    @commands.command(name="resume_puhinator", aliases=["r_puhinator"], help="Resume playing the current track/song")
     async def resume(self, ctx, *args):
         if self.is_paused:
             self.is_playing = True
             self.is_paused = False
 
-    @commands.command(name="skip", aliases=["s"], help="Skip the current track/song")
+    @commands.command(name="skip_puhinator", aliases=["s_puhinator"], help="Skip the current track/song")
     async def skip(self, ctx, *args):
         if self.vc is not None and self.vc:
             self.vc.stop()
             await self.play_music(ctx)
 
-    @commands.command(name="queue", aliases=["q"], help="Display all the songs currently in the queue")
+    @commands.command(name="queue_puhinator", aliases=["q_puhinator"], help="Display all the songs currently in the queue")
     async def queue(self, ctx):
         if self.music_queue:
             await ctx.send("\n".join([song[0]['title'] for song in self.music_queue[:5]]))
         else:
             await ctx.send("No music currently in the Queue.")
 
-    @commands.command(name="clear", aliases=["c", "bin"], help="Stop the current track/song and clear the Queue")
+    @commands.command(name="clear_puhinator", aliases=["c_puhinator", "bin_puhinator"], help="Stop the current track/song and clear the Queue")
     async def clear(self, ctx):
         if self.vc is not None and self.is_playing:
             self.vc.stop()
         self.music_queue = []
         await ctx.send("The music queue has been cleared.")
 
-    @commands.command(name="leave", aliases=["disconnect", "l", "d"], help="Kick the bot from the Voice Channel")
+    @commands.command(name="leave_puhinator", aliases=["disconnect_puhinator", "l_puhinator", "d_puhinator"], help="Kick the bot from the Voice Channel")
     async def leave(self, ctx):
         self.is_playing = False
         self.is_paused = False
         if self.vc is not None and self.vc.is_connected():
             await self.vc.disconnect()
+
+    @commands.command(name="display_queue_puhinator", aliases=["dq_puhinator"], help="Display all the songs in the queue and delete after 60 seconds")
+    async def display_queue(self, ctx):
+        if self.music_queue:
+            songs = "\n".join([song[0]['title'] for song in self.music_queue])
+            message = await ctx.send(f"Songs in Queue:\n{songs}")
+
+# Wait for 60 seconds and then delete the message
+            await asyncio.sleep(60)
+            await message.delete()
+        else:
+            await ctx.send("No music currently in the Queue.")
+
+    @commands.command(name="remove_puhinator", aliases=["rm_puhinator"], help="Remove a song from the queue")
+    async def remove(self, ctx, position: int):
+        if 0 <= position < len(self.music_queue):
+            removed_song = self.music_queue.pop(position)
+            await ctx.send(f"Removed '{removed_song[0]['title']}' from the queue at position {position}.")
+        else:
+            await ctx.send("Invalid queue position. Please specify a valid position in the queue.")
+
+    @commands.command(name="play_from_queue_puhinator", aliases=["pfq_puhinator"], help="Play a song from a specific position in the queue")
+    async def play_from_queue(self, ctx, position: int):
+        if 0 <= position < len(self.music_queue):
+            song = self.music_queue[position]
+            await ctx.send(f"Playing '{song[0]['title']}' from the queue at position {position}.")
+            if not self.is_playing:
+                await self.play_music(ctx)
+        else:
+            await ctx.send("Invalid queue position. Please specify a valid position in the queue.")
+
+
+def setup(bot):
+    bot.add_cog(MusicPlay(bot))
