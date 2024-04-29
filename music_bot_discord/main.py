@@ -5,7 +5,7 @@ import logging
 import asyncio
 
 logging.basicConfig(level=logging.INFO)
-# Function to read token from .token file
+# Function to read token from .tokens file
 def read_token_from_file():
     with open('.tokens', 'r') as file:
         return file.read().strip()
