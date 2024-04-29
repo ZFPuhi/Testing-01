@@ -29,7 +29,7 @@ async def load_extensions():
 
 # Get the token from the file
 token = read_token_from_file()
-
+print(read_token_from_file())
 # Run the client with the token
 async def main():
     await load_extensions()
