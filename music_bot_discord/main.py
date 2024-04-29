@@ -27,11 +27,11 @@ async def load_extensions():
             traceback.print_exc()
 # Get the token from the file
 token = read_token_from_file()
+#bot.run(read_token_from_file())
 # Run the client with the token
 async def main():
     await load_extensions()
     await bot.run(token)
 # Call the main coroutine directly
 if __name__ == "__main__":
-    bot.run(read_token_from_file())
     asyncio.run(main())
