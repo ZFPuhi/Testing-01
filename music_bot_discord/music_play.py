@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import asyncio
 
 from youtube_dl import YoutubeDL
 from spotify_dl import SpotifyDL
@@ -7,7 +8,6 @@ from spotify_dl import SpotifyDL
 class MusicPlay(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
         self.is_playing = False
         self.is_paused = False
         self.music_queue = []
@@ -119,6 +119,37 @@ class MusicPlay(commands.Cog):
         self.is_paused = False
         if self.vc is not None and self.vc.is_connected():
             await self.vc.disconnect()
+
+    @commands.command(name="display_queue_puhinator", aliases=["dq_puhinator"], help="Display all the songs in the queue and delete after 60 seconds")
+    async def display_queue(self, ctx):
+        if self.music_queue:
+            songs = "\n".join([song[0]['title'] for song in self.music_queue])
+            message = await ctx.send(f"Songs in Queue:\n{songs}")
+
+# Wait for 60 seconds and then delete the message
+            await asyncio.sleep(60)
+            await message.delete()
+        else:
+            await ctx.send("No music currently in the Queue.")
+
+    @commands.command(name="remove_puhinator", aliases=["rm_puhinator"], help="Remove a song from the queue")
+    async def remove(self, ctx, position: int):
+        if 0 <= position < len(self.music_queue):
+            removed_song = self.music_queue.pop(position)
+            await ctx.send(f"Removed '{removed_song[0]['title']}' from the queue at position {position}.")
+        else:
+            await ctx.send("Invalid queue position. Please specify a valid position in the queue.")
+
+    @commands.command(name="play_from_queue_puhinator", aliases=["pfq_puhinator"], help="Play a song from a specific position in the queue")
+    async def play_from_queue(self, ctx, position: int):
+        if 0 <= position < len(self.music_queue):
+            song = self.music_queue[position]
+            await ctx.send(f"Playing '{song[0]['title']}' from the queue at position {position}.")
+            if not self.is_playing:
+                await self.play_music(ctx)
+        else:
+            await ctx.send("Invalid queue position. Please specify a valid position in the queue.")
+
 
 def setup(bot):
     bot.add_cog(MusicPlay(bot))
