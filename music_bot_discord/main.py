@@ -1,12 +1,16 @@
 import discord
 from discord.ext import commands
+import asyncio
 
 # Function to read token from .token file
 def read_token_from_file():
-    with open('.token', 'r') as file:
+    with open('.tokens', 'r') as file:
         return file.read().strip()
 
-bot = commands.Bot(command_prefix='!')
+# Define intents
+intents = discord.Intents.default()
+
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Remove the default help command
 bot.remove_command("help")
@@ -20,4 +24,10 @@ for extension in extensions:
 token = read_token_from_file()
 
 # Run the client with the token
-bot.run(token)
+async def main():
+    await bot.start(token)
+
+# Call the main coroutine directly
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())

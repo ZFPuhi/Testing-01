@@ -18,15 +18,14 @@ General commands, please use common sense:
 /resume - resumes the current song/track
 ```
 """
-    
     @commands.Cog.listener()
     async def on_ready(self):
         for guild in self.bot.guilds:
             for channel in guild.text_channels:
                 await channel.send(self.help_message)
 
-    @commands.command(name="help", help="Display all the available commands")
-    async def help(self, ctx):
+    @commands.command(name="help_puhinator", help="Display all the available commands")
+    async def help_puhinator(self, ctx):  # Changed command name
         await ctx.send(self.help_message)
 
 def setup(bot):
