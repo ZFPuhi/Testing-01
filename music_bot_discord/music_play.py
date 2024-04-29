@@ -7,7 +7,7 @@ from spotify_dl import SpotifyDL
 class MusicPlay(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        
+
         self.is_playing = False
         self.is_paused = False
         self.music_queue = []
@@ -119,3 +119,6 @@ class MusicPlay(commands.Cog):
         self.is_paused = False
         if self.vc is not None and self.vc.is_connected():
             await self.vc.disconnect()
+
+def setup(bot):
+    bot.add_cog(MusicPlay(bot))
