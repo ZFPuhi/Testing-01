@@ -1,8 +1,14 @@
 # Free Open Source Youtube + Spotify Music Bot for Discord
 
-Currently still in test mode.
+<p align="center">
+  <img src="img/sup.jpg?raw=true" alt="Hey there" width="380" height="400"><br>
+  <h3>Are you a magician? Because whenever I look at you, everyone else disappears from my creepy radar.</h3>
+</p>
+<br><br>
 
-* Added few commands, would need to add more.
+<p><h1>Currently still in test mode.</p></h1>
+
+Added few commands, would need to add more.
 <p>Current list of commands is as follows:</p>
 
 <p>/p - Command that will play the desired track/song.</p>
