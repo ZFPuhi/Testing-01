@@ -29,5 +29,5 @@ General commands, please use common sense:
     async def help_puhinator(self, ctx):  # Changed command name
         await ctx.send(self.help_message)
 
-def setup(bot):
-    bot.add_cog(MusicHelp(bot))
+async def setup(bot):
+    await bot.add_cog(MusicHelp(bot))
