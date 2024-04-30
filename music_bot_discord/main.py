@@ -33,10 +33,17 @@ async def load_extensions():
 # Get the token from the file
 token = read_token_from_file()
 
-# Run the client with the token
+# Event loop
 async def main():
-    await load_extensions()
-    await bot.run(token)
+    try:
+        await load_extensions()
+        await bot.start(token)
+    except KeyboardInterrupt:
+        await bot.close()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        traceback.print_exc()
+        await bot.close()
 
 # Call the main coroutine directly
 if __name__ == "__main__":
