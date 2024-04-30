@@ -1,9 +1,13 @@
 import discord
 from discord.ext import commands
 import asyncio
-
+import spotify
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 from youtube_dl import YoutubeDL
-from spotify_dl import SpotifyDL
+import os
+
+SPOTIFY_FILE_PATH = ".spotify"
 
 class MusicPlay(commands.Cog):
     def __init__(self, bot):
@@ -15,6 +19,42 @@ class MusicPlay(commands.Cog):
         self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnected_delay_max 5', 'options': '-vn' }
         self.vc = None
 
+        # Extract Spotify credentials from .spotify file
+        self.spotify_client_id, self.spotify_client_secret = self.read_spotify_credentials()
+
+        # Print loaded Spotify credentials
+        print(f"Spotify Client ID: {self.spotify_client_id}")
+        print(f"Spotify Client Secret: {self.spotify_client_secret}")
+        
+    def read_spotify_credentials(self):
+        # Initialize variables to store client ID and client secret
+        spotify_client_id = None
+        spotify_client_secret = None
+        try:
+            # Open the .spotify file and read its contents
+            with open(SPOTIFY_FILE_PATH, 'r') as file:
+                for line in file:
+                    # Split each line into key-value pairs based on the '=' delimiter
+                    key, value = line.strip().split('=')
+
+                    # Check if the key is SPOTIPY_CLIENT_ID
+                    if key == 'SPOTIPY_CLIENT_ID':
+                        spotify_client_id = value
+                    # Check if the key is SPOTIPY_CLIENT_SECRET
+                    elif key == 'SPOTIPY_CLIENT_SECRET':
+                        spotify_client_secret = value
+
+            # Return the extracted Spotify credentials
+            return spotify_client_id, spotify_client_secret
+        except FileNotFoundError:
+            # Handle the case when the .spotify file is not found
+            print(".spotify file not found.")
+            return None, None
+        except Exception as e:
+            # Handle any other exceptions that may occur during file reading
+            print(f"Error reading .spotify file: {e}")
+            return None, None
+
     def search_yt_spotify(self, item):
         ydl = YoutubeDL(self.YDL_OPTIONS)
         with ydl:
@@ -25,9 +65,13 @@ class MusicPlay(commands.Cog):
             except Exception:
                 # If searching in YouTube fails, try searching in Spotify
                 try:
-                    info = SpotifyDL().search_song(item)
-                    return {'source': info['url'], 'title': info['title']}
-                except Exception:
+                    sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=self.spotify_client_id, client_secret=self.spotify_client_secret))
+                    results = sp.search(q=item, limit=1, type='track')
+                    track_uri = results['tracks']['items'][0]['uri']
+                    track_info = sp.track(track_uri)
+                    return {'source': track_info['preview_url'], 'title': track_info['name']}
+                except Exception as e:
+                    print(e)
                     return False
 
     async def play_next(self):
@@ -150,6 +194,5 @@ class MusicPlay(commands.Cog):
         else:
             await ctx.send("Invalid queue position. Please specify a valid position in the queue.")
 
-
-def setup(bot):
-    bot.add_cog(MusicPlay(bot))
+async def setup(bot):
+    await bot.add_cog(MusicPlay(bot))
