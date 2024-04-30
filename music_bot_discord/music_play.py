@@ -21,9 +21,11 @@ class MusicPlay(commands.Cog):
 
         # Extract Spotify credentials from .spotify file
         self.spotify_client_id, self.spotify_client_secret = self.read_spotify_credentials()
+
         # Print loaded Spotify credentials
         print(f"Spotify Client ID: {self.spotify_client_id}")
         print(f"Spotify Client Secret: {self.spotify_client_secret}")
+        
     def read_spotify_credentials(self):
         # Initialize variables to store client ID and client secret
         spotify_client_id = None
