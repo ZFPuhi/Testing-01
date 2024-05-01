@@ -5,6 +5,7 @@ import spotify
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from youtube_dl import YoutubeDL
+import yt_dlp as youtube_dl
 import os
 
 SPOTIFY_FILE_PATH = ".spotify"
@@ -15,9 +16,10 @@ class MusicPlay(commands.Cog):
         self.is_playing = False
         self.is_paused = False
         self.music_queue = []
-        self.YDL_OPTIONS = {'format': 'bestaudio', 'nonplaylist': 'True'}
-        self.FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnected_delay_max 5', 'options': '-vn' }
+        self.YDL_OPTIONS = {'format': 'bestaudio/best'}
+        self.FFMPEG_OPTIONS = {'options': '-vn'}
         self.vc = None
+        self.ytdl = YoutubeDL(self.YDL_OPTIONS)
 
         # Extract Spotify credentials from .spotify file
         self.spotify_client_id, self.spotify_client_secret = self.read_spotify_credentials()
@@ -25,7 +27,7 @@ class MusicPlay(commands.Cog):
         # Print loaded Spotify credentials
         print(f"Spotify Client ID: {self.spotify_client_id}")
         print(f"Spotify Client Secret: {self.spotify_client_secret}")
-        
+
     def read_spotify_credentials(self):
         # Initialize variables to store client ID and client secret
         spotify_client_id = None
@@ -75,13 +77,17 @@ class MusicPlay(commands.Cog):
                     return False
 
     async def play_next(self):
-        if len(self.music_queue) > 0:
+        if not self.is_playing and self.music_queue:
             self.is_playing = True
-            m_url = self.music_queue[0][0]['source']
-            self.music_queue.pop(0)
-            self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.bot.loop.create_task(self.play_next()))
+            song = self.music_queue.pop(0)
+            m_url = song[0]['source']
+            self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.bot.loop.create_task(self.check_queue()))
+
+    async def check_queue(self):
+        while self.vc.is_playing():
+            await asyncio.sleep(1)
         else:
-            self.is_playing = False
+            await self.play_next()
 
     async def play_music(self, ctx):
         if len(self.music_queue) > 0:
@@ -99,6 +105,9 @@ class MusicPlay(commands.Cog):
 
                 self.music_queue.pop(0)
                 self.vc.play(discord.FFmpegPCMAudio(m_url, **self.FFMPEG_OPTIONS), after=lambda e: self.bot.loop.create_task(self.play_next()))
+                
+                # Send a message indicating the current song that is playing
+                await ctx.send(f"Now playing: {self.music_queue[0][0]['title']}")
             else:
                 self.is_playing = False
 
@@ -115,7 +124,8 @@ class MusicPlay(commands.Cog):
             if type(song) == type(True):
                 await ctx.send("Could not find the song. Incorrect format, try a different song")
             else:
-                await ctx.send("Song was successfully added to the Queue")
+                # Send a message containing the details of the song that was added to the queue
+                await ctx.send(f"Song added to queue: **{song['title']}**\nPlaytime: {self.get_song_playtime(song)}\nLink: {song['source']}")
                 self.music_queue.append([song, voice_channel])
                 if not self.is_playing:
                     await self.play_music(ctx)

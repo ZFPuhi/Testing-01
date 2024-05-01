@@ -33,6 +33,7 @@ async def load_extensions():
 # Get the token from the file
 token = read_token_from_file()
 
+
 # Event loop
 async def main():
     try:
@@ -44,6 +45,16 @@ async def main():
         print(f"An error occurred: {e}")
         traceback.print_exc()
         await bot.close()
+
+# Bot event for starting to play a song
+@bot.event
+async def on_voice_state_update(member, before, after):
+    if after.channel is not None and after.channel.guild.voice_client is not None and not bot.voice_clients:
+        vc = after.channel.guild.voice_client
+        if not vc.is_playing():
+            # Send a message indicating that the bot has started playing the next song
+            await after.channel.send("Now playing the next song.")
+            vc.resume()
 
 # Call the main coroutine directly
 if __name__ == "__main__":
