@@ -1,3 +1,5 @@
 .tokens
 __pycache__
 .spotify
+ffmpeg.exe
+.youtubeapi

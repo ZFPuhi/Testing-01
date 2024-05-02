@@ -7,6 +7,8 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from youtube_dl import YoutubeDL
 import yt_dlp as youtube_dl
 import os
+import googleapiclient.discovery
+import re
 
 SPOTIFY_FILE_PATH = ".spotify"
 
@@ -75,7 +77,42 @@ class MusicPlay(commands.Cog):
                 except Exception as e:
                     print(e)
                     return False
+    async def get_song_playtime(self, song):
+        if 'youtube' in song['source']:
+            try:
+                with open('.youtubeapi', 'r') as api_file:
+                    api_key = api_file.read().strip()
+                    # Print the API key
+                    print(f"YouTube API key loaded: {api_key}")
+            except FileNotFoundError:
+                print("YouTube API key file not found.")
+                return "Unknown"
 
+            print(f"Song source URL: {song['source']}")
+            video_id = song['source'].split("watch?v=")[1]
+            print(f"Extracted video ID: {video_id}")
+
+            youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=api_key)
+            request = youtube.videos().list(part="contentDetails", id=video_id)
+            response = request.execute()
+            duration = response['items'][0]['contentDetails']['duration']
+
+            # Parse the duration to get the playtime in HH:MM:SS format
+            playtime = self.parse_duration(duration)
+            return playtime
+        else:
+            return "Unknown"
+        
+    def parse_duration(self, duration):
+        match = re.match(r'PT(\d+H)?(\d+M)?(\d+S)?', duration)
+        hours = int(match.group(1)[0]) if match.group(1) else 0
+        minutes = int(match.group(2)[0]) if match.group(2) else 0
+        seconds = int(match.group(3)[0]) if match.group(3) else 0
+
+        # Convert duration to HH:MM:SS format
+        playtime = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        return playtime
+            
     async def play_next(self):
         if not self.is_playing and self.music_queue:
             self.is_playing = True
@@ -125,7 +162,8 @@ class MusicPlay(commands.Cog):
                 await ctx.send("Could not find the song. Incorrect format, try a different song")
             else:
                 # Send a message containing the details of the song that was added to the queue
-                await ctx.send(f"Song added to queue: **{song['title']}**\nPlaytime: {self.get_song_playtime(song)}\nLink: {song['source']}")
+                playtime = await self.get_song_playtime(song)
+                await ctx.send(f"Song added to queue: **{song['title']}**\nPlaytime: {playtime}\nLink: {song['source']}")
                 self.music_queue.append([song, voice_channel])
                 if not self.is_playing:
                     await self.play_music(ctx)
