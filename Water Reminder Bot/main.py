@@ -55,12 +55,10 @@ def remind_to_drink_water():
         time.sleep(3600)  # 3600 seconds = 1 hour
 
 def play_sound(sound_file):
-    # Check if the sound file exists
+    # Check if the sound file exists in the current directory
     if os.path.exists(sound_file):
-        # Load and play the sound file
         pygame.mixer.music.load(sound_file)
         pygame.mixer.music.play()
-        
         # Wait for the sound to finish playing
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)
