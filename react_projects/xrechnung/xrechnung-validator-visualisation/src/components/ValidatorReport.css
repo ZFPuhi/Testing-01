@@ -1,0 +1,94 @@
+/* General Container Styling */
+.validator-container {
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    margin: 20px auto;
+    max-width: 800px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+  }
+  
+  /* Header Section */
+  .validator-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .validator-header h1 {
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .validator-header .back-link {
+    color: #007BFF;
+    text-decoration: none;
+    font-size: 16px;
+  }
+  
+  .validator-header .back-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Validation Summary */
+  .validation-summary h2 {
+    font-size: 20px;
+    color: #555;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+  }
+  
+  .document-info p {
+    margin: 8px 0;
+  }
+  
+  .conformance-status {
+    margin: 16px 0;
+    padding: 12px;
+    border-radius: 5px;
+  }
+  
+  .conformance-status.valid {
+    background-color: #e9f8e9;
+    color: #2e7d32;
+  }
+  
+  .conformance-status.invalid {
+    background-color: #fbe9e7;
+    color: #d32f2f;
+  }
+  
+  .recommendation {
+    font-weight: bold;
+  }
+  
+  /* Document Content Table */
+  .document-content h3 {
+    margin-top: 24px;
+    font-size: 18px;
+  }
+  
+  .document-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+  }
+  
+  .document-content th, .document-content td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+  }
+  
+  .document-content th {
+    background-color: #f7f7f7;
+    color: #555;
+  }
+  
+  .document-content tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  

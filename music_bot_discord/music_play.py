@@ -4,11 +4,11 @@ import asyncio
 import spotify
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
-from youtube_dl import YoutubeDL
-import yt_dlp as youtube_dl
+import youtube_dl
 import os
 import googleapiclient.discovery
 import re
+import pytube
 
 SPOTIFY_FILE_PATH = ".spotify"
 
@@ -21,7 +21,7 @@ class MusicPlay(commands.Cog):
         self.YDL_OPTIONS = {'format': 'bestaudio/best'}
         self.FFMPEG_OPTIONS = {'options': '-vn'}
         self.vc = None
-        self.ytdl = YoutubeDL(self.YDL_OPTIONS)
+        self.ytdl = youtube_dl.YoutubeDL(self.YDL_OPTIONS)
 
         # Extract Spotify credentials from .spotify file
         self.spotify_client_id, self.spotify_client_secret = self.read_spotify_credentials()
@@ -59,49 +59,80 @@ class MusicPlay(commands.Cog):
             print(f"Error reading .spotify file: {e}")
             return None, None
 
+    #Search on Youtube / Spotify
     def search_yt_spotify(self, item):
-        ydl = YoutubeDL(self.YDL_OPTIONS)
+        ydl = youtube_dl.YoutubeDL(self.YDL_OPTIONS)
         with ydl:
             try:
-                # Attempt to search in YouTube
-                info = ydl.extract_info("ytsearch:%s" % item, download=False)['entries'][0]
-                return {'source': info['formats'][0]['url'], 'title': info['title']}
-            except Exception:
-                # If searching in YouTube fails, try searching in Spotify
-                try:
+                # Check if the provided item is a Spotify URL
+                if 'open.spotify.com' in item:
+                    print("Processing Spotify URL...")
+                    # Extract the track ID from the Spotify URL
+                    track_id = item.split('/')[-1].split('?')[0]
+                    print("Track ID:", track_id)
                     sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=self.spotify_client_id, client_secret=self.spotify_client_secret))
-                    results = sp.search(q=item, limit=1, type='track')
-                    track_uri = results['tracks']['items'][0]['uri']
-                    track_info = sp.track(track_uri)
-                    return {'source': track_info['preview_url'], 'title': track_info['name']}
-                except Exception as e:
-                    print(e)
+                    # Get track details using the track ID
+                    track_info = sp.track(track_id)
+                    print("Track Info:", track_info)
+                    if track_info and 'preview_url' in track_info:
+                        source_url = track_info['preview_url']
+                        print("Preview URL:", source_url)
+                        return {'source': source_url, 'title': track_info['name']}
+                    else:
+                        print("Preview URL not found for the Spotify track.")
+                        return False
+                else:
+                    # Attempt to search in YouTube
+                    info = ydl.extract_info("ytsearch:%s" % item, download=False)
+                    if 'entries' in info and info['entries']:
+                        youtube_result = info['entries'][0]
+                        if 'formats' in youtube_result and youtube_result['formats']:
+                            # Extract the video URL from the search results
+                            source_url = youtube_result['formats'][0]['url']
+                            return {'source': source_url, 'title': youtube_result['title']}
+                        else:
+                            print("Video URL not found in the search results.")
+                    else:
+                        print("No entries found in YouTube search results.")
                     return False
+            except spotipy.SpotifyException as e:
+                print(f"Spotify API error: {e}")
+                return False
+            except Exception as e:
+                print(f"Error searching in YouTube and Spotify: {e}")
+                return False
+
+    # Get song playtime
     async def get_song_playtime(self, song):
         if 'youtube' in song['source']:
             try:
                 with open('.youtubeapi', 'r') as api_file:
                     api_key = api_file.read().strip()
-                    # Print the API key
-                    print(f"YouTube API key loaded: {api_key}")
             except FileNotFoundError:
                 print("YouTube API key file not found.")
-                return "Unknown"
+                return "Unknown", song['source']
 
-            print(f"Song source URL: {song['source']}")
-            video_id = song['source'].split("watch?v=")[1]
-            print(f"Extracted video ID: {video_id}")
+            if "watch?v=" in song['source']:
+                video_id = song['source'].split("watch?v=")[1].split("&")[0]
+            else:
+                print("Video ID not found in the source URL.")
+                return "Unknown", song['source']
 
-            youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=api_key)
-            request = youtube.videos().list(part="contentDetails", id=video_id)
-            response = request.execute()
-            duration = response['items'][0]['contentDetails']['duration']
+            youtube_url = f"https://www.youtube.com/watch?v={video_id}"
 
-            # Parse the duration to get the playtime in HH:MM:SS format
-            playtime = self.parse_duration(duration)
-            return playtime
+            try:
+                video = pytube.YouTube(youtube_url)
+                duration = video.length
+                print(f"Video duration: {duration} seconds")
+
+                playtime = self.format_duration(duration)
+                print(f"Parsed playtime: {playtime}")
+                return playtime, youtube_url
+            except Exception as e:
+                print(f"Error fetching video duration: {e}")
+                return "Unknown", song['source']
         else:
-            return "Unknown"
+            return "Unknown", song['source']
         
     def parse_duration(self, duration):
         match = re.match(r'PT(\d+H)?(\d+M)?(\d+S)?', duration)
@@ -145,6 +176,7 @@ class MusicPlay(commands.Cog):
                 
                 # Send a message indicating the current song that is playing
                 await ctx.send(f"Now playing: {self.music_queue[0][0]['title']}")
+
             else:
                 self.is_playing = False
 
@@ -154,19 +186,27 @@ class MusicPlay(commands.Cog):
         voice_channel = ctx.author.voice.channel
         if voice_channel is None:
             await ctx.send("You have to be in a Voice Channel in order to play some music, so please connect or get slapped!")
+            return
         elif self.is_paused:
             self.vc.resume()
-        else:
-            song = self.search_yt_spotify(query)
+            return
+
+        song = self.search_yt_spotify(query)
+        if song:
             if type(song) == type(True):
                 await ctx.send("Could not find the song. Incorrect format, try a different song")
             else:
-                # Send a message containing the details of the song that was added to the queue
-                playtime = await self.get_song_playtime(song)
-                await ctx.send(f"Song added to queue: **{song['title']}**\nPlaytime: {playtime}\nLink: {song['source']}")
-                self.music_queue.append([song, voice_channel])
-                if not self.is_playing:
-                    await self.play_music(ctx)
+                playtime, source_url = await self.get_song_playtime(song)
+                if source_url:
+                    # Send a message containing the details of the song that was added to the queue
+                    await ctx.send(f"Song added to queue: **{song['title']}**\nPlaytime: {playtime}\n")
+                    self.music_queue.append([song, voice_channel])
+                    if not self.is_playing:
+                        await self.play_music(ctx)
+                else:
+                    await ctx.send("Failed to retrieve the source URL of the song. Please try again later.")
+        else:
+            await ctx.send("Could not find the song. Please try a different song name or keywords.")
 
     @commands.command(name="pause_puhinator", help="The current track/song has been paused")
     async def pause(self, ctx, *args):
