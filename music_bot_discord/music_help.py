@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-import asyncio
 
 class MusicHelp(commands.Cog):
     def __init__(self, bot):
@@ -54,12 +53,10 @@ Description: Plays a song from a specific position in the queue.
 """
     @commands.Cog.listener()
     async def on_ready(self):
-        for guild in self.bot.guilds:
-            for channel in guild.text_channels:
-                await channel.send(self.help_message)
-
+        print('Bot is ready.')
+        
     @commands.command(name="help_puhinator", help="Display all the available commands")
-    async def help_puhinator(self, ctx):  # Changed command name
+    async def help_puhinator(self, ctx):
         await ctx.send(self.help_message)
 
 async def setup(bot):
